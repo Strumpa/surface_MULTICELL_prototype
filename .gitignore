@@ -11,6 +11,11 @@
 *.out
 *.asv
 
+bin/
+include/
+lib/
+build/
+lib64/
 */__pycache__/
 PTT/DMLG_proj/__pycache__/
 
