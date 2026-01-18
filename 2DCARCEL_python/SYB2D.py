@@ -7,29 +7,140 @@
 
 import numpy as np
 
-def di_f(sig, seg):
+def akin(n, x):
     """
-    Collision probability function (placeholder).
+    Bickley-Naylor function of order n >= 1 at x >= 0.
+    
+    Faithful translation from MATLAB akin.m by A. Hébert.
+    
+    Parameters:
+    -----------
+    n : int
+        Order of the function (n >= 1)
+    x : float
+        Argument (x >= 0)
+    
+    Returns:
+    --------
+    float : Bickley-Naylor function value Ki_n(x)
+    
+    (c) 2005 Alain Hebert, Ecole Polytechnique de Montreal
+    Translated to Python 2026
+    """
+    if n < 1:
+        raise ValueError('n must be > 0')
+    elif x < -1.0e-10:
+        raise ValueError(f'x must be >= 0. x={x:.5g}')
+    elif x <= 0:
+        bick0 = [1.57079632679489, 1.0, 0.78539816339745, 0.66666666666667, 0.58904862254808, 0.53333333333333,
+                 0.4908738521234, 0.45714285714286, 0.42951462060798, 0.4063492063492]
+        return bick0[n - 1] if n <= 10 else bick0[9]
+    elif x < 1:
+        xsq = x * x
+        lnx = np.log(x)
+        xi1 = x - 0.91169076342161
+        xi2 = x - 0.2451000192866
+        xi3 = x - 1.0
+        xi4 = x - 0.68448452306295
+        if n == 1:
+            f = ((((((((0.7945473334662959e-4 * x + 0.51674609093834e-4) * x + 0.100122044600498e-1) * x + 
+                    0.8766262885587739e-2) * x + 0.5720051721276178) * x + 0.5454840912170553) * x + 
+                  0.139868293763185e2) * x + 0.1531257133183402e2) * x + 0.1501664584981108e3) * xi3 - 0.3916967515498982e2
+            f = f / ((x + 0.1219596245756669e1) * xi3 - 0.1193155300614385e3)
+            f = f + (x * lnx * (((0.2337898258663651e-2 * xsq + 0.4646979722852471) * xsq + 0.3695696751512241e2) * xsq +
+                    0.123465484355545e4) * xsq + 0.175237360009281e5) / ((xsq - 0.2256564898552151e3) * xsq + 0.175237360009281e5)
+        elif n == 2:
+            f = (((0.1403059e-10 * xi1 + 0.4811961706232723e3) + (((0.9084569646859357 * x + 0.490556407762756e2) * x +
+                  0.7521727532834893e2) * x + 0.1693807200769639e4) + (((0.1086764750096697e-1 * xi2 - 1.0e-15) * xi2 +
+                  0.1190096804348251e1) * (x**4))) * (xi1 * xi1))
+            f = f / (0.1810502008060146e4 + (((xi3 - 0.1893578319929816e2) * x - 0.7855291318496802e2) * xi3))
+            f = f + (xsq * lnx * (-0.1520774316867189e9) / (((((xsq - 0.5631701819761997e2) * xsq -
+                    0.3143123637802091e3) * xsq + 0.211218654889524e6) * xsq - 0.1267311930720872e8) * xsq + 0.3041548633734379e9))
+        elif n == 3:
+            f = ((((0.1173330390873767e5 * x + 0.1095667013274141e7) * xi4 - 0.379051e-8) * xi4 + 0.1269499275481224e7) *
+                 xi3 - 0.7043581454636306e6)
+            f = f / (((((((xi3 - 0.5812262590904993e1) * x - 0.17551758398419e2) * x - 0.133516191424771e3) * x -
+                       0.3942586515380026e4) * xi3 + 0.6077621585261822e5) * x + 0.2053835980116203e6) * xi3 - 0.2961415636470914e7)
+            f = f + (x**3 * lnx * (((0.2631126488553487e-2 * xsq + 0.5562992588150486) * xsq + 0.3721363059831219e2) * xsq +
+                    0.3027965765686327e4) / ((xsq - 0.2309130812632629e3) * xsq + 0.1816779459411791e5))
+        else:
+            ak1 = akin(n - 1, x)
+            ak2 = akin(n - 2, x)
+            ak3 = akin(n - 3, x)
+            f = (ak3 - ak1) * x / (n - 1) + (n - 2) * ak2 / (n - 1)
+    elif x < 6:
+        sqrtx = np.sqrt(x)
+        expx = np.exp(-x)
+        xrec = 1.0 / x
+        if n == 1:
+            f = ((((((0.1822929159877549e2 * xrec + 0.3272001530672078e3) * xrec + 0.1326511766009986e4) * xrec +
+                   0.1868734192859498e4) * xrec + 0.1059016416894119e4) * xrec + 0.2427580524508585e3) * xrec + 0.1833164538368226e2) * expx
+            f = f / ((((((((xrec + 0.6590511376539962e2) * xrec + 0.5952592332227032e3) * xrec + 0.1687760486772990e4) * xrec +
+                         0.1922624187690926e4) * xrec + 0.957005687628236e3) * xrec + 0.2028344160151355e3) * xrec + 0.1462653804563246e2) * sqrtx)
+        elif n == 2:
+            f = (((((((0.8407469297501269e-1 * xrec + 0.5596498537189973e1) * xrec + 0.4801733781249936e2) * xrec +
+                    0.123974074193467e3) * xrec + 0.12440411402683e3) * xrec + 0.5320941946830476e2) * xrec + 0.9534267279889207e1) * xrec + 0.5766817227841408) * expx
+            f = f / ((((((((xrec + 0.2014290370371339e2) * xrec + 0.9747773947009136e2) * xrec + 0.1754089481769652e3) * xrec +
+                         0.1383006201574071e3) * xrec + 0.5035544525458363e2) * xrec + 0.8124881079392082e1) * xrec + 0.4601255143693006) * sqrtx)
+        elif n == 3:
+            f = (((((((0.3093393327788074e-2 * xrec + 0.8959830746710818e-1) * xrec + 0.4333691656848653) * xrec +
+                    0.7366450143916231) * xrec + 0.5521543746274372) * xrec + 0.1835695652656039) * xrec + 0.2439716682658748e-1) * expx) / sqrtx
+        else:
+            ak1 = akin(n - 1, x)
+            ak2 = akin(n - 2, x)
+            ak3 = akin(n - 3, x)
+            f = (ak3 - ak1) * x / (n - 1) + (n - 2) * ak2 / (n - 1)
+    elif x < 673.5:
+        sqrtx = np.sqrt(x)
+        expx = np.exp(-x)
+        xrec = 1.0 / x
+        if n == 10:
+            f = ((((((((((xrec + 0.2380952380952381e1) * xrec + 0.1904761904761905e1) * xrec + 0.9523809523809524) * xrec +
+                      0.3174603174603175) * xrec + 0.7936507936507937e-1) * xrec + 0.1587301587301587e-1) * xrec +
+                   0.2551020408163265e-2) * xrec + 0.3255792150607811e-3) * xrec + 0.3125e-4) / sqrtx) * expx
+        elif n == 9:
+            f = ((((((((((xrec + 0.2222222222222222e1) * xrec + 0.1666666666666667e1) * xrec + 0.7777777777777778) * xrec +
+                      0.2380952380952381) * xrec + 0.5291005291005291e-1) * xrec + 0.9259259259259259e-2) * xrec +
+                   0.1286008230452675e-2) * xrec + 0.1422475719179229e-3) * xrec + 0.1190476190476190e-4) / sqrtx) * expx
+        elif n == 8:
+            f = ((((((((((xrec + 0.2083333333333333e1) * xrec + 0.1458333333333333e1) * xrec + 0.625) * xrec +
+                      0.1736111111111111) * xrec + 0.3472222222222222e-1) * xrec + 0.5401234567901235e-2) * xrec +
+                   0.6614711266617621e-3) * xrec + 0.6376608658979881e-4) * xrec + 0.4629629629629630e-5) / sqrtx) * expx
+        else:
+            ak1 = akin(n - 1, x)
+            ak2 = akin(n - 2, x)
+            ak3 = akin(n - 3, x)
+            f = ((n + 2) * ak3 - (n + 1) * ak1) / x + ak2
+    else:
+        f = 0.0
+    return f
+
+def di_f(sig, segment):
+    """
+    Collision probability function.
     
     Parameters:
     -----------
     sig : float
         Cross section (cm^-1)
-    seg : float
+    segment : float
         Segment length (cm)
     
     Returns:
     --------
     float : Collision probability
+    
+    (c) 2008 Alain Hebert, Ecole Polytechnique de Montreal
+    Translated to Python 2026
     """
-    tau = sig * seg
-    if tau < 1e-10:
-        return seg * (1.0 - 0.5 * tau)
-    return (1.0 - np.exp(-tau)) / sig
+    if sig != 0:
+        return segment / sig - (akin(3, 0) - akin(3, sig * segment)) / sig**2
+    else:
+        return np.pi * segment**2 / 4
 
-def ei_f(tau0, sig, seg):
+def ei_f(tau0, sig, segment):
     """
-    Escape probability function (placeholder).
+    Escape probability function.
     
     Parameters:
     -----------
@@ -37,68 +148,54 @@ def ei_f(tau0, sig, seg):
         Initial optical depth
     sig : float
         Cross section (cm^-1)
-    seg : float
+    segment : float
         Segment length (cm)
     
     Returns:
     --------
     float : Escape probability
+    
+    (c) 2008 Alain Hebert, Ecole Polytechnique de Montreal
+    Translated to Python 2026
     """
-    tau1 = tau0 + sig * seg
-    if sig < 1e-10:
-        return seg * np.exp(-tau0)
-    return (np.exp(-tau0) - np.exp(-tau1)) / sig
+    if sig != 0:
+        return (akin(3, tau0) - akin(3, tau0 + sig * segment)) / sig
+    else:
+        return segment * akin(2, tau0)
 
-def cij_f(tau0, sig1, sig3, seg1, seg3):
+def cij_f(tau0, sigi, sigj, segmenti, segmentj):
     """
-    Transmission probability function (placeholder).
+    Transmission probability function.
     
     Parameters:
     -----------
     tau0 : float
         Initial optical depth
-    sig1 : float
+    sigi : float
         Cross section of first region (cm^-1)
-    sig3 : float
+    sigj : float
         Cross section of second region (cm^-1)
-    seg1 : float
+    segmenti : float
         First segment length (cm)
-    seg3 : float
+    segmentj : float
         Second segment length (cm)
     
     Returns:
     --------
     float : Transmission probability
-    """
-    # Simplified placeholder - actual implementation depends on geometry
-    tau3 = sig3 * seg3
-    if sig3 < 1e-10:
-        return seg3 * np.exp(-tau0)
-    return (np.exp(-tau0) - np.exp(-tau0 - tau3)) / sig3
-
-def akin(n, tau):
-    """
-    Bickley-Naylor function (placeholder).
     
-    Parameters:
-    -----------
-    n : int
-        Order of the function
-    tau : float
-        Optical depth
-    
-    Returns:
-    --------
-    float : Bickley-Naylor function value
+    (c) 2008 Alain Hebert, Ecole Polytechnique de Montreal
+    Translated to Python 2026
     """
-    # Placeholder implementation for Ki_n(tau)
-    # Actual implementation requires proper numerical integration
-    if n == 3:
-        if tau < 1e-10:
-            return 0.5
-        # Very simplified approximation
-        return 0.5 * np.exp(-tau)
-    return 0.0
+    if sigi != 0 and sigj != 0:
+        return (akin(3, tau0) - akin(3, tau0 + sigi * segmenti) - akin(3, tau0 + sigj * segmentj) +
+                akin(3, tau0 + sigi * segmenti + sigj * segmentj)) / (sigi * sigj)
+    elif sigi == 0 and sigj != 0:
+        return (akin(2, tau0) - akin(2, tau0 + sigj * segmentj)) * segmenti / sigj
+    elif sigi != 0 and sigj == 0:
+        return (akin(2, tau0) - akin(2, tau0 + sigi * segmenti)) * segmentj / sigi
+    else:
+        return akin(1, tau0) * segmenti * segmentj
 
 def indpos(i, j):
     """

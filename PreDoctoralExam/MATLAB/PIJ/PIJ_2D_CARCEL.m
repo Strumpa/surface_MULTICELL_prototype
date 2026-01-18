@@ -1,6 +1,6 @@
 % Question 1, Pre-Doctoral Exam : 
 % Method of Collision Probabilities solution to 2D Pincell neutron flux.
-% Author : R. Guasch, combining and adapting scripts written by A. Hébert.
+% Author : R. Guasch, combining and adapting scripts written by A. Hï¿½bert.
 % available at https://https://moodle.polymtl.ca/course/view.php?id=1233
 
 side = sqrt(4.9) ; %cm
@@ -32,7 +32,7 @@ end
 % 1) Generate tracking file :
 tracks = sybt2d(side,radii,nangle,ngauss) ; % calling sybt2d to generate tracking file
 % sybt2d.m retrieved from the ENE6101 moodle course page, presented in
-% Appendix A.4 of "Applied Reactor Physics" - A. Hébert.
+% Appendix A.4 of "Applied Reactor Physics" - A. Hï¿½bert.
 nsurf = tracks(1) ;
 nvol = tracks(2) ;
 surfaces = tracks(6:5+nsurf) ;
@@ -68,7 +68,7 @@ for indi=2:(nsurf+nvol)
     end
 end
 
-%check_symmetric = issymmetric(T_matrix) ;
+check_symmetric = issymmetric(T_matrix) ;
 
 % decompose into sub-blocks. 
 
@@ -85,8 +85,10 @@ for alpha=1:nsurf
         P_SS(alpha,beta) = t_SS(alpha,beta)*4/surfaces(alpha) ;
     end
 end
+disp("transmission probabilities P_SS = ") ;
+disp(P_SS) ;
 
-%pss = sybpss(tracks, sig_tot) ; % compare with pss given by sybpss 
+pss = sybpss(tracks, sig_tot) ; % compare with pss given by sybpss 
 % sybpss recovered from "Applied Reactor Physics" Appendix A. 
 % ---> They're the same.
 
@@ -95,17 +97,22 @@ p_ij = zeros(nvol,nvol) ;
 for i=1:nvol
     p_ij(i,:) = t_ij(i,:)/volumes(i) ;
 end
+disp("pij martix = ") ;
 disp(p_ij) ;
 
 P_vS = zeros(nvol,nsurf);
 for i=1:nvol
     P_vS(i,:) = t_vS(i,:)/volumes(i) ;
 end
+disp("P_vS matrix = ") ;
+disp(P_vS) ;
 
 p_Sv = zeros(nsurf,nvol) ;
 for alpha=1:nsurf
     p_Sv(alpha,:) = t_Sv(alpha,:)*4/surfaces(alpha) ;
 end
+disp("p_Sv matrix = ") ;
+disp(p_Sv) ;
 
 
 % 4.3)  check normalization
@@ -127,17 +134,28 @@ for alpha=1:nsurf
         sumAlpha(alpha) = sumAlpha(alpha) + p_Sv(alpha,j)*sig_tot(j) ;
     end
 end
+disp("sumI = ") ;
+disp(sumI) ;
+
+disp("sumAlpha = ") ;
+disp(sumAlpha) ;
 
 % 5) Compute the closed reduced collision probability matrix :
 % Use eq. 3.350 and 3.351
 
 PSS_tilde = albe.*inv(eye(nsurf,nsurf) -albe*P_SS) ; % eq 3.355
+disp("PSS_tilde matrix= ") ;
+disp(PSS_tilde) ;
 
 Pvv_tilde = p_ij + P_vS*PSS_tilde*p_Sv ; % eq 3.354
+disp("Pvv_tilde matrix = ") ;
+disp(Pvv_tilde) ;
 
 % 6) Compute the scattering reduced probability matrix W
 
 W = (eye(nvol,nvol)-Pvv_tilde*S0)\Pvv_tilde ;
+disp("W matrix = ") ;
+disp(W) ;
 
 % 7) Compute 
 [iter,evect,eval] = al1eig(W*Qfiss,10^-8);
